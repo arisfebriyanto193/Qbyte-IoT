@@ -1,6 +1,6 @@
 #include <WiFi.h>
 #include <WebSocketsClient.h>
-#include "QbyteIoT.h"
+#include "Qbyte-IoT.h"
 
 WebSocketsClient ws;
 QbyteIoT iot(ws);
