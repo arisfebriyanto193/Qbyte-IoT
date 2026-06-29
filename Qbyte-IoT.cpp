@@ -81,18 +81,35 @@ void QbyteIoT::_handleConnected() {
 // =====================
 void QbyteIoT::_handleMessage(const String& msg) {
   int t1 = msg.indexOf("\"topic\":\"");
+  if (t1 == -1) return;
   int t2 = msg.indexOf("\"", t1 + 9);
-  if (t1 == -1 || t2 == -1) return;
+  if (t2 == -1) return;
 
   String topic = msg.substring(t1 + 9, t2);
 
   int p1 = msg.indexOf("\"payload\":");
   if (p1 == -1) return;
 
-  String payload = msg.substring(p1 + 10);
-  payload.replace("}", "");
-  payload.replace("\"", "");
-  payload.trim();
+  int valStart = p1 + 10;
+  while(valStart < msg.length() && (msg[valStart] == ' ' || msg[valStart] == ':')) {
+      valStart++;
+  }
+  
+  String payload = "";
+  if (msg[valStart] == '"') {
+      int valEnd = msg.indexOf("\"", valStart + 1);
+      if (valEnd != -1) {
+          payload = msg.substring(valStart + 1, valEnd);
+      }
+  } else {
+      int valEnd = valStart;
+      while(valEnd < msg.length() && msg[valEnd] != ',' && msg[valEnd] != '}') {
+          valEnd++;
+      }
+      payload = msg.substring(valStart, valEnd);
+      payload.replace("\"", "");
+  }
 
+  payload.trim();
   _data[topic] = payload;
 }
