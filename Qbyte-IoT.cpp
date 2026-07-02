@@ -17,8 +17,18 @@ void QbyteIoT::loop() {
 }
 
 // =====================
+void QbyteIoT::setOnlineTopic(const String& topic) {
+  _onlineTopic = topic;
+}
+
+// =====================
 void QbyteIoT::sub(const String& topic) {
   _subs.push_back(topic);
+
+  // Otomatis jadikan topik subscribe pertama sebagai identitas online jika belum diset
+  if (_onlineTopic.length() == 0) {
+    _onlineTopic = topic;
+  }
 
   // jika sudah connected → langsung kirim
   if (_ws.isConnected()) {
@@ -29,10 +39,16 @@ void QbyteIoT::sub(const String& topic) {
 
 // =====================
 void QbyteIoT::pub(const String& topic, int payload) {
+  if (_onlineTopic.length() == 0) {
+    _onlineTopic = topic;
+  }
   _ws.sendTXT(topic + "|" + String(payload));
 }
 
 void QbyteIoT::pub(const String& topic, const String& payload) {
+  if (_onlineTopic.length() == 0) {
+    _onlineTopic = topic;
+  }
   _ws.sendTXT(topic + "|" + payload);
 }
 
@@ -71,7 +87,13 @@ void QbyteIoT::_wsEvent(WStype_t type, uint8_t* payload, size_t length) {
 
 // =====================
 void QbyteIoT::_handleConnected() {
-  // KIRIM ULANG SEMUA SUBSCRIBE
+  // 1. KIRIM IDENTITAS ONLINE (opsional tapi disarankan untuk SENSOR yg jarang nge-publish)
+  if (_onlineTopic.length() > 0) {
+    String msg = "{\"action\":\"publish\",\"topic\":\"" + _onlineTopic + "/status\",\"payload\":\"ON\"}";
+    _ws.sendTXT(msg);
+  }
+
+  // 2. KIRIM ULANG SEMUA SUBSCRIBE
   for (auto& t : _subs) {
     String msg = "{\"action\":\"subscribe\",\"topic\":\"" + t + "\"}";
     _ws.sendTXT(msg);

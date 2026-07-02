@@ -12,6 +12,9 @@ public:
 
   void begin();
   void loop();
+  
+  // Fungsi untuk menset topic utama agar otomatis terdeteksi ONLINE di backend
+  void setOnlineTopic(const String& topic);
 
   void sub(const String& topic);
   void pub(const String& topic, int payload);
@@ -26,6 +29,7 @@ private:
 
   std::vector<String> _subs;
   std::map<String, String> _data;
+  String _onlineTopic; // Menyimpan topik untuk identifikasi online
 
   static QbyteIoT* _instance;
   static void _wsEvent(WStype_t type, uint8_t* payload, size_t length);
